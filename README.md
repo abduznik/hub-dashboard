@@ -4,10 +4,12 @@
 
 **[Live Demo](https://abduznik.github.io/hub-dashboard/)**
 
-![Python](https://img.shields.io/badge/python-3.12-blue)
-![Flask](https://img.shields.io/badge/flask-3.x-black)
-![Docker](https://img.shields.io/badge/docker-ready-2496ED)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![License](https://img.shields.io/github/license/abduznik/hub-dashboard)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/abduznik/hub-dashboard)](https://github.com/abduznik/hub-dashboard/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/abduznik/hub-dashboard)](https://github.com/abduznik/hub-dashboard/network/members)
+[![Last commit](https://img.shields.io/github/last-commit/abduznik/hub-dashboard)](https://github.com/abduznik/hub-dashboard/commits)
+[![GitHub issues](https://img.shields.io/github/issues/abduznik/hub-dashboard)](https://github.com/abduznik/hub-dashboard/issues)
+[![Sponsor](https://img.shields.io/badge/Sponsor-abduznik-ea4aaa)](https://github.com/sponsors/abduznik)
 
 HUB.DASH is a single-file Flask app with a SQLite backend that gives you a link launcher for all your self-hosted services and favorite sites — styled like an early-2000s Windows XP forum. It fetches and caches favicons locally (no third-party favicon services), and includes a built-in DuckDuckGo search box with history.
 
