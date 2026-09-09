@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUB.DASH — Demo</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --border: #0f3460;
+    --text: #e0e0e0;
+    --accent: #e94560;
+    --highlight: #53d8fb;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(rgba(15,52,96,0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,52,96,0.25) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: var(--text);
+    font-family: Verdana, "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 11px;
+    min-height: 100vh;
+  }
+  a { color: var(--accent); }
+
+  .bevel-out {
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #808080;
+    border-right: 1px solid #808080;
+  }
+
+  #boot {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: #000000;
+    color: var(--highlight);
+    font-family: Verdana, "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  #boot.hidden { display: none; }
+  #boot-bar-track {
+    width: 220px;
+    height: 14px;
+    background: #000;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: 1px solid #ffffff;
+    border-right: 1px solid #ffffff;
+    padding: 1px;
+  }
+  #boot-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--highlight);
+  }
+
+  #app { display: none; }
+  #app.show { display: block; }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px 12px 30px;
+  }
+
+  .demo-banner {
+    background: #8a5a00;
+    color: #fff8e0;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    border-top: 1px solid #ffd27f;
+    border-left: 1px solid #ffd27f;
+    border-bottom: 1px solid #4d3200;
+    border-right: 1px solid #4d3200;
+  }
+  .demo-banner a { color: var(--highlight); }
+
+  .navbar {
+    background: #0f3460;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #808080;
+    border-right: 1px solid #808080;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 10px;
+  }
+  .navbar > span.brand {
+    color: #cfe8ff;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-right: 1px solid #08172c;
+  }
+  .navbar .navlink {
+    color: var(--highlight);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 6px 12px;
+    margin-left: auto;
+  }
+
+  .header-bar {
+    background: linear-gradient(180deg, #0f3460 0%, #0f3460 50%, #1a1a2e 50%, #1a1a2e 100%);
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 2px solid var(--accent);
+    border-right: 1px solid #808080;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .site-logo {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    background: var(--accent);
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid #ff8fa3;
+    border-left: 1px solid #ff8fa3;
+    border-bottom: 1px solid #7c1c30;
+    border-right: 1px solid #7c1c30;
+  }
+  .header-text h1 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--highlight);
+    font-weight: bold;
+  }
+  #clock {
+    font-size: 10px;
+    color: #9fb3d1;
+    margin-top: 2px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 0 0 4px;
+  }
+  .tab {
+    background: #0d1a33;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: none;
+    border-right: 1px solid #060f1e;
+    color: #9fb3d1;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--panel);
+    color: var(--highlight);
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    position: relative;
+    top: 1px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #808080;
+    border-right: 1px solid #808080;
+    padding: 0;
+  }
+  .panel-heading {
+    background: #12203f;
+    border-bottom: 1px solid var(--border);
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--highlight);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 620px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .card:hover { background: #1e2d50; }
+
+  .icon-box {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f3460;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: 1px solid #2a4d80;
+    border-right: 1px solid #2a4d80;
+    color: var(--highlight);
+    font-weight: bold;
+    font-size: 14px;
+    overflow: hidden;
+  }
+  .icon-box img { width: 32px; height: 32px; object-fit: contain; }
+
+  .card-body { min-width: 0; flex: 1; }
+  .card-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-domain {
+    font-size: 10px;
+    color: #7f93b3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-cat {
+    flex: none;
+    font-size: 9px;
+    font-weight: bold;
+    color: #1a1a2e;
+    background: var(--highlight);
+    padding: 2px 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  footer {
+    text-align: center;
+    color: #5c6f8f;
+    font-size: 10px;
+    margin-top: 14px;
+  }
+  footer a { color: #7f93b3; }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div>Loading HUB.DASH...</div>
+  <div id="boot-bar-track"><div id="boot-bar-fill"></div></div>
+</div>
+
+<div id="app">
+  <div class="wrap">
+
+    <div class="demo-banner">
+      This is a demo — deploy the full app for search, history, and custom links.
+      <a href="https://github.com/abduznik/hub-dashboard" target="_blank" rel="noopener">Get it on GitHub &rarr;</a>
+    </div>
+
+    <nav class="navbar">
+      <span class="brand">HUB.DASH FORUMS</span>
+      <span class="navlink" id="edit-toggle">EDIT</span>
+    </nav>
+
+    <div class="header-bar">
+      <div class="site-logo">HD</div>
+      <div class="header-text">
+        <h1>// HUB.DASH</h1>
+        <div id="clock">Demo</div>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="panel">
+      <div class="panel-heading">Bookmarked Links</div>
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <footer>HUB.DASH v2.0 &mdash; MIT License &mdash; <a href="https://github.com/abduznik/hub-dashboard" target="_blank" rel="noopener">github.com/abduznik/hub-dashboard</a></footer>
+  </div>
+</div>
+
+<script>
+(function bootSequence() {
+  const boot = document.getElementById("boot");
+  const app = document.getElementById("app");
+  const fill = document.getElementById("boot-bar-fill");
+  fill.style.transition = "width 0.5s linear";
+  requestAnimationFrame(() => { fill.style.width = "100%"; });
+  setTimeout(() => {
+    boot.classList.add("hidden");
+    app.classList.add("show");
+  }, 500);
+})();
+
+const links = [
+  { name: "GitHub", url: "https://github.com", category: "development" },
+  { name: "Stack Overflow", url: "https://stackoverflow.com", category: "development" },
+  { name: "YouTube", url: "https://youtube.com", category: "media" },
+  { name: "Reddit", url: "https://reddit.com", category: "social" },
+  { name: "Wikipedia", url: "https://wikipedia.org", category: "reference" },
+  { name: "Hacker News", url: "https://news.ycombinator.com", category: "news" },
+  { name: "MDN Web Docs", url: "https://developer.mozilla.org", category: "development" },
+  { name: "Docker Hub", url: "https://hub.docker.com", category: "devops" },
+  { name: "GitLab", url: "https://gitlab.com", category: "development" },
+  { name: "DigitalOcean", url: "https://digitalocean.com", category: "devops" },
+  { name: "VS Code Marketplace", url: "https://marketplace.visualstudio.com", category: "development" },
+  { name: "Arch Wiki", url: "https://wiki.archlinux.org", category: "reference" }
+];
+const categories = [...new Set(links.map(l => l.category))];
+let activeCategory = "All";
+
+function domainOf(url) {
+  try { return new URL(url).hostname; } catch (e) { return url; }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderTabs() {
+  const tabs = document.getElementById("tabs");
+  const all = ["All", ...categories];
+  tabs.innerHTML = "";
+  all.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "tab" + (cat === activeCategory ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => { activeCategory = cat; renderTabs(); renderGrid(); };
+    tabs.appendChild(btn);
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  links
+    .filter(l => activeCategory === "All" || l.category === activeCategory)
+    .forEach(link => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const domain = domainOf(link.url);
+      const faviconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
+
+      card.innerHTML = `
+        <div class="icon-box"><img src="${faviconUrl}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentElement.textContent='${escapeHtml(link.name.charAt(0).toUpperCase())}';"></div>
+        <div class="card-body">
+          <div class="card-name">${escapeHtml(link.name)}</div>
+          <div class="card-domain">${escapeHtml(domain)}</div>
+        </div>
+        <div class="card-cat">${escapeHtml(link.category)}</div>
+      `;
+
+      card.addEventListener("click", () => window.open(link.url, "_blank", "noopener"));
+
+      grid.appendChild(card);
+    });
+}
+
+document.getElementById("edit-toggle").addEventListener("click", () => {
+  alert("Fork the repo to customize your dashboard");
+});
+
+renderTabs();
+renderGrid();
+</script>
+</body>
+</html>
