@@ -2,6 +2,8 @@
 
 *A retro-styled self-hosted dashboard for your homelab links.*
 
+**[Live Demo](https://abduznik.github.io/hub-dashboard/)**
+
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![Flask](https://img.shields.io/badge/flask-3.x-black)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ED)
