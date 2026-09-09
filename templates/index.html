@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUB.DASH</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --border: #0f3460;
+    --text: #e0e0e0;
+    --accent: #e94560;
+    --highlight: #53d8fb;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(rgba(15,52,96,0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,52,96,0.25) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: var(--text);
+    font-family: Verdana, "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 11px;
+    min-height: 100vh;
+  }
+  a { color: var(--accent); }
+
+  /* ---------- XP-style bevels (reused everywhere) ---------- */
+  .bevel-out {
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #808080;
+    border-right: 1px solid #808080;
+  }
+  .bevel-in {
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: 1px solid #ffffff;
+    border-right: 1px solid #ffffff;
+  }
+
+  /* ---------- Boot screen ---------- */
+  #boot {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: #000000;
+    color: var(--highlight);
+    font-family: Verdana, "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  #boot.hidden { display: none; }
+  #boot-bar-track {
+    width: 220px;
+    height: 14px;
+    background: #000;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: 1px solid #ffffff;
+    border-right: 1px solid #ffffff;
+    padding: 1px;
+  }
+  #boot-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--highlight);
+  }
+
+  /* ---------- Layout ---------- */
+  #app { display: none; }
+  #app.show { display: block; }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px 12px 30px;
+  }
+
+  /* top nav bar */
+  .navbar {
+    background: #0f3460;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #808080;
+    border-right: 1px solid #808080;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 10px;
+  }
+  .navbar.editing { background: #8a5a00; }
+  .navbar a, .navbar .navlink {
+    color: #cfe8ff;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-right: 1px solid #08172c;
+  }
+  .navbar > span.brand {
+    color: #cfe8ff;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-right: 1px solid #08172c;
+  }
+  .navbar a:hover, .navbar .navlink:hover { color: #ffffff; background: #16457a; }
+  .navbar a.active { color: #ffffff; background: #16457a; }
+  .navbar .navlink.edit-link { margin-left: auto; color: var(--highlight); border-right: none; }
+  .navbar.editing .navlink.edit-link { color: #fff8e0; }
+
+  /* header */
+  .header-bar {
+    background: linear-gradient(180deg, #0f3460 0%, #0f3460 50%, #1a1a2e 50%, #1a1a2e 100%);
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 2px solid var(--accent);
+    border-right: 1px solid #808080;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .site-logo {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    background: var(--accent);
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid #ff8fa3;
+    border-left: 1px solid #ff8fa3;
+    border-bottom: 1px solid #7c1c30;
+    border-right: 1px solid #7c1c30;
+  }
+  .header-text h1 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--highlight);
+    text-transform: none;
+    font-weight: bold;
+  }
+  #clock {
+    font-size: 10px;
+    color: #9fb3d1;
+    margin-top: 2px;
+  }
+
+  /* ---------- Search box ---------- */
+  .search-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  #search-input {
+    flex: 1;
+    font-family: Verdana, "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 11px;
+    padding: 4px 6px;
+    background: #ffffff;
+    color: #000000;
+    border-top: 1px solid #999999;
+    border-left: 1px solid #999999;
+    border-bottom: 1px solid #dddddd;
+    border-right: 1px solid #dddddd;
+    outline: none;
+  }
+  #search-btn {
+    font-family: Verdana, "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 16px;
+    background: #d4d0c8;
+    color: #000000;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #666666;
+    border-right: 1px solid #666666;
+    cursor: pointer;
+  }
+  #search-btn:active {
+    border-top: 1px solid #666666;
+    border-left: 1px solid #666666;
+    border-bottom: 1px solid #ffffff;
+    border-right: 1px solid #ffffff;
+  }
+
+  .search-results {
+    display: none;
+    margin-bottom: 10px;
+  }
+  .search-results.show { display: block; }
+
+  .result-item {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-title {
+    font-size: 12px;
+    color: var(--highlight);
+    text-decoration: underline;
+  }
+  .result-title:hover { color: #ffffff; }
+  .result-url {
+    font-size: 10px;
+    color: #7f93b3;
+    margin: 2px 0;
+  }
+  .result-snippet {
+    font-size: 11px;
+    color: var(--text);
+  }
+  .no-results {
+    padding: 10px;
+    color: #7f93b3;
+  }
+
+  .history-section { margin-bottom: 14px; }
+  .history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    font-size: 10px;
+    color: #7f93b3;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-item .hist-query {
+    cursor: pointer;
+    flex: 1;
+    color: #9fb3d1;
+  }
+  .history-item .hist-query:hover { color: var(--highlight); text-decoration: underline; }
+  .history-item .hist-time { flex: none; color: #5c6f8f; }
+  .history-item .hist-del {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    line-height: 12px;
+    text-align: center;
+    background: #d4d0c8;
+    color: #000;
+    font-size: 9px;
+    font-weight: bold;
+    cursor: pointer;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #666666;
+    border-right: 1px solid #666666;
+  }
+
+  /* category tabs */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 0 0 4px;
+  }
+  .tab {
+    background: #0d1a33;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: none;
+    border-right: 1px solid #060f1e;
+    color: #9fb3d1;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--panel);
+    color: var(--highlight);
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    position: relative;
+    top: 1px;
+  }
+
+  /* content panel (forum thread list) */
+  .panel {
+    background: var(--panel);
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #808080;
+    border-right: 1px solid #808080;
+    padding: 0;
+  }
+  .panel-heading {
+    background: #12203f;
+    border-bottom: 1px solid var(--border);
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--highlight);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 620px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  /* thread-row style card */
+  .card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .card:hover { background: #1e2d50; }
+  .card.edit-mode { cursor: default; }
+
+  .icon-box {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f3460;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-bottom: 1px solid #2a4d80;
+    border-right: 1px solid #2a4d80;
+    color: var(--highlight);
+    font-weight: bold;
+    font-size: 14px;
+    overflow: hidden;
+  }
+  .icon-box img { width: 32px; height: 32px; object-fit: contain; }
+
+  .card-body { min-width: 0; flex: 1; }
+  .card-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-domain {
+    font-size: 10px;
+    color: #7f93b3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-cat {
+    flex: none;
+    font-size: 9px;
+    font-weight: bold;
+    color: #1a1a2e;
+    background: var(--highlight);
+    padding: 2px 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .card .drag-handle {
+    display: none;
+    flex: none;
+    color: #7f93b3;
+    font-size: 12px;
+    cursor: grab;
+  }
+  .card.edit-mode .drag-handle { display: block; }
+  .card.dragging { opacity: 0.4; }
+
+  .card .del-btn {
+    display: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    line-height: 16px;
+    text-align: center;
+    background: #d4d0c8;
+    color: #000;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #666666;
+    border-right: 1px solid #666666;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+  }
+  .card.edit-mode .del-btn { display: block; }
+
+  .card .refresh-btn {
+    display: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    line-height: 16px;
+    text-align: center;
+    background: #d4d0c8;
+    color: #000;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-bottom: 1px solid #666666;
+    border-right: 1px solid #666666;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .card.edit-mode .refresh-btn { display: block; }
+
+  .add-row {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    color: var(--highlight);
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .add-row.edit-mode { display: flex; }
+  .add-row:hover { background: #1e2d50; }
+
+  footer {
+    text-align: center;
+    color: #5c6f8f;
+    font-size: 10px;
+    margin-top: 14px;
+  }
+
+  #view-home, #view-search { display: none; }
+  #view-home.show, #view-search.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div>Loading HUB.DASH...</div>
+  <div id="boot-bar-track"><div id="boot-bar-fill"></div></div>
+</div>
+
+<div id="app">
+  <div class="wrap">
+
+    <nav class="navbar" id="navbar">
+      <span class="brand">HUB.DASH FORUMS</span>
+      <a href="#" id="nav-home" class="active">Home</a>
+      <a href="#" id="nav-search">Search</a>
+      <span class="navlink edit-link" id="edit-toggle">EDIT</span>
+    </nav>
+
+    <div id="view-home" class="show">
+      <div class="header-bar">
+        <div class="site-logo">HD</div>
+        <div class="header-text">
+          <h1>// HUB.DASH</h1>
+          <div id="clock"></div>
+        </div>
+      </div>
+
+      <div class="tabs" id="tabs"></div>
+
+      <div class="panel">
+        <div class="panel-heading">Bookmarked Links</div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+
+    <div id="view-search">
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Search the web..." />
+        <button id="search-btn">Search</button>
+      </div>
+
+      <div class="panel search-results" id="search-results">
+        <div class="panel-heading">Search Results</div>
+        <div id="search-results-body"></div>
+      </div>
+
+      <div class="panel history-section">
+        <div class="panel-heading">Recent Searches</div>
+        <ul class="history-list" id="history-list"></ul>
+      </div>
+    </div>
+
+    <footer>Powered by HUB.DASH v2.0</footer>
+  </div>
+</div>
+
+<script>
+(function bootSequence() {
+  const boot = document.getElementById("boot");
+  const app = document.getElementById("app");
+  const fill = document.getElementById("boot-bar-fill");
+  if (sessionStorage.getItem("hubBooted")) {
+    boot.classList.add("hidden");
+    app.classList.add("show");
+    return;
+  }
+  fill.style.transition = "width 0.5s linear";
+  requestAnimationFrame(() => { fill.style.width = "100%"; });
+  setTimeout(() => {
+    boot.classList.add("hidden");
+    app.classList.add("show");
+    sessionStorage.setItem("hubBooted", "1");
+  }, 500);
+})();
+
+function tickClock() {
+  const el = document.getElementById("clock");
+  el.textContent = new Date().toLocaleString("en-GB");
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+let links = [];
+let categories = [];
+let activeCategory = "All";
+let editMode = false;
+let dragId = null;
+
+async function api(path, opts) {
+  const res = await fetch("/api" + path, Object.assign({
+    headers: { "Content-Type": "application/json" }
+  }, opts));
+  if (!res.ok) throw new Error("API error " + res.status);
+  return res.status === 204 ? null : res.json();
+}
+
+async function loadAll() {
+  [links, categories] = await Promise.all([
+    api("/links"),
+    api("/categories")
+  ]);
+  renderTabs();
+  renderGrid();
+}
+
+function renderTabs() {
+  const tabs = document.getElementById("tabs");
+  const all = ["All", ...categories];
+  tabs.innerHTML = "";
+  all.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "tab" + (cat === activeCategory ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => { activeCategory = cat; renderTabs(); renderGrid(); };
+    tabs.appendChild(btn);
+  });
+}
+
+function domainOf(url) {
+  try { return new URL(url).hostname; } catch (e) { return url; }
+}
+
+function renderGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  const filtered = links
+    .filter(l => activeCategory === "All" || l.category === activeCategory)
+    .sort((a, b) => a.sort_order - b.sort_order);
+
+  filtered.forEach(link => {
+    const card = document.createElement("div");
+    card.className = "card" + (editMode ? " edit-mode" : "");
+    card.draggable = editMode;
+    card.dataset.id = link.id;
+
+    const domain = domainOf(link.url);
+    const faviconUrl = `/api/favicon/${link.id}`;
+
+    card.innerHTML = `
+      <span class="drag-handle">::</span>
+      <div class="icon-box"><img src="${faviconUrl}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentElement.textContent='${escapeHtml(link.name.charAt(0).toUpperCase())}';"></div>
+      <div class="card-body">
+        <div class="card-name">${escapeHtml(link.name)}</div>
+        <div class="card-domain">${escapeHtml(domain)}</div>
+      </div>
+      <div class="card-cat">${escapeHtml(link.category)}</div>
+      <button class="refresh-btn" title="Refresh favicon">&#8635;</button>
+      <button class="del-btn" title="Delete">x</button>
+    `;
+
+    card.addEventListener("click", (e) => {
+      if (editMode) return;
+      window.open(link.url, "_blank");
+    });
+
+    card.querySelector(".del-btn").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await api("/links/" + link.id, { method: "DELETE" });
+      await loadAll();
+    });
+
+    card.querySelector(".refresh-btn").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await fetch(`/api/favicon/refresh/${link.id}`, { method: "POST" });
+      await loadAll();
+    });
+
+    card.addEventListener("dragstart", () => { dragId = link.id; card.classList.add("dragging"); });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+    card.addEventListener("dragover", (e) => e.preventDefault());
+    card.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      if (dragId === null || dragId === link.id) return;
+      const ids = filtered.map(l => l.id);
+      const fromIdx = ids.indexOf(dragId);
+      const toIdx = ids.indexOf(link.id);
+      ids.splice(toIdx, 0, ids.splice(fromIdx, 1)[0]);
+      const reordered = ids.map((id, idx) => ({ id, sort_order: idx }));
+      await api("/links/reorder", { method: "PUT", body: JSON.stringify(reordered) });
+      dragId = null;
+      await loadAll();
+    });
+
+    grid.appendChild(card);
+  });
+
+  const addRow = document.createElement("div");
+  addRow.className = "add-row" + (editMode ? " edit-mode" : "");
+  addRow.textContent = "+";
+  addRow.onclick = addLink;
+  grid.appendChild(addRow);
+}
+
+async function addLink() {
+  const name = prompt("Name:");
+  if (!name) return;
+  const url = prompt("URL:");
+  if (!url) return;
+  const category = prompt("Category:", "general") || "general";
+  await api("/links", {
+    method: "POST",
+    body: JSON.stringify({ name, url, category })
+  });
+  await loadAll();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showView(view) {
+  document.getElementById("view-home").classList.toggle("show", view === "home");
+  document.getElementById("view-search").classList.toggle("show", view === "search");
+  document.getElementById("nav-home").classList.toggle("active", view === "home");
+  document.getElementById("nav-search").classList.toggle("active", view === "search");
+}
+document.getElementById("nav-home").addEventListener("click", (e) => { e.preventDefault(); showView("home"); });
+document.getElementById("nav-search").addEventListener("click", (e) => { e.preventDefault(); showView("search"); });
+
+document.getElementById("edit-toggle").addEventListener("click", () => {
+  editMode = !editMode;
+  document.getElementById("edit-toggle").textContent = editMode ? "DONE" : "EDIT";
+  document.getElementById("navbar").classList.toggle("editing", editMode);
+  renderGrid();
+});
+
+/* ---------- Search ---------- */
+
+function renderSearchResults(results) {
+  const panel = document.getElementById("search-results");
+  const body = document.getElementById("search-results-body");
+  body.innerHTML = "";
+  if (!results.length) {
+    body.innerHTML = '<div class="no-results">No results.</div>';
+  } else {
+    results.forEach(r => {
+      const item = document.createElement("div");
+      item.className = "result-item";
+      item.innerHTML = `
+        <a class="result-title" href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a>
+        <div class="result-url">${escapeHtml(domainOf(r.url))}</div>
+        <div class="result-snippet">${escapeHtml(r.snippet)}</div>
+      `;
+      body.appendChild(item);
+    });
+  }
+  panel.classList.add("show");
+}
+
+async function runSearch(query) {
+  if (!query) return;
+  document.getElementById("search-input").value = query;
+  const results = await api("/search?q=" + encodeURIComponent(query));
+  renderSearchResults(results);
+  await loadHistory();
+}
+
+async function loadHistory() {
+  const history = await api("/search/history");
+  const list = document.getElementById("history-list");
+  list.innerHTML = "";
+  history.forEach(h => {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.innerHTML = `
+      <span class="hist-query">${escapeHtml(h.query)}</span>
+      <span class="hist-time">${escapeHtml(h.created_at)}</span>
+      <span class="hist-del" title="Delete">x</span>
+    `;
+    li.querySelector(".hist-query").addEventListener("click", () => runSearch(h.query));
+    li.querySelector(".hist-del").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await api("/search/" + h.id, { method: "DELETE" });
+      await loadHistory();
+    });
+    list.appendChild(li);
+  });
+}
+
+document.getElementById("search-btn").addEventListener("click", () => {
+  runSearch(document.getElementById("search-input").value.trim());
+});
+document.getElementById("search-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    runSearch(document.getElementById("search-input").value.trim());
+  }
+});
+
+loadAll();
+loadHistory();
+</script>
+</body>
+</html>

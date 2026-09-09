@@ -1,0 +1,10 @@
+services:
+  hub:
+    build: .
+    container_name: hub-dash
+    ports:
+      - "7070:7070"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    mem_limit: 128m
