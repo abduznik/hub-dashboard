@@ -9,7 +9,16 @@ from pathlib import Path
 from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
+from curl_cffi import requests as curl_requests
 from flask import Flask, Response, g, jsonify, request, render_template
+
+# DuckDuckGo bot-blocks generic python-requests TLS fingerprints with an
+# HTTP 202 anomaly page (zero results, no error). Impersonating a real
+# browser handshake is what actually gets results back.
+SEARCH_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("hubdash.favicon")
@@ -293,14 +302,22 @@ def search():
     if not query:
         return jsonify({"error": "q is required"}), 400
 
-    resp = requests.get(
+    resp = curl_requests.get(
         "https://html.duckduckgo.com/html/",
         params={"q": query},
-        headers={"User-Agent": "Mozilla/5.0"},
-        timeout=10,
+        headers={"User-Agent": SEARCH_UA, "Accept-Language": "en-US,en;q=0.9"},
+        impersonate="chrome124",
+        timeout=15,
     )
     parser = DuckDuckGoResultParser()
     parser.feed(resp.text)
+    if not parser.results:
+        logging.getLogger("hubdash.search").warning(
+            "no results for %r (status=%s, anomaly=%s)",
+            query,
+            resp.status_code,
+            "anomaly" in resp.text.lower(),
+        )
     results = parser.results
 
     db = get_db()
